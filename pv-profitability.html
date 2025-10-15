@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PV Rent Profitability</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 0;
+            min-height: calc(100vh - 200px);
+        }
+
+        .left-panel {
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 2px solid #e9ecef;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+
+        .right-panel {
+            padding: 30px;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .input-section:last-child {
+            border-bottom: none;
+        }
+
+        .input-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .form-field {
+            margin-bottom: 15px;
+        }
+
+        .form-field label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-field input[type="number"],
+        .form-field select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-field input[type="number"]:focus,
+        .form-field select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .slider-with-number {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .helper-text {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .kpi-card.green {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+        }
+
+        .kpi-card.red {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .kpi-card.neutral {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .kpi-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .kpi-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .feasibility-badge {
+            grid-column: 1 / -1;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .chart-container h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .chart-controls button {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .chart-controls button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .table-container h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        table th {
+            background: #f8f9fa;
+            padding: 12px 8px;
+            text-align: right;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        table th:first-child {
+            text-align: center;
+        }
+
+        table td {
+            padding: 10px 8px;
+            text-align: right;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        table td:first-child {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+            font-size: 0.9rem;
+        }
+
+        .tooltip-icon {
+            cursor: help;
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 16px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+            position: relative;
+        }
+
+        .tooltip-icon:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            font-size: 0.8rem;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .left-panel {
+                border-right: none;
+                border-bottom: 2px solid #e9ecef;
+                max-height: none;
+            }
+
+            .right-panel {
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PV Rent Profitability</h1>
+            <p>find your monthly price & term</p>
+        </div>
+
+        <div class="main-layout">
+            <div class="left-panel">
+                <div class="input-section">
+                    <h3>Financing</h3>
+                    <div class="form-field">
+                        <label>Loan term (years)</label>
+                        <div class="slider-with-number">
+                            <input type="range" id="loanTerm" class="slider" min="5" max="20" step="1" value="10">
+                            <input type="number" id="loanTermNum" min="5" max="20" step="1" value="10">
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Monthly loan payment (CZK)</label>
+                        <input type="number" id="monthlyPayment" value="8500" step="100">
+                    </div>
+                    <div class="form-field">
+                        <label>Initial equity / upfront costs (CZK)</label>
+                        <input type="number" id="initialEquity" value="0" step="1000">
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <h3>Contract</h3>
+                    <div class="form-field">
+                        <label>Rent term (years)</label>
+                        <div class="slider-with-number">
+                            <input type="range" id="contractTerm" class="slider" min="5" max="20" step="1" value="10">
+                            <input type="number" id="contractTermNum" min="5" max="20" step="1" value="10">
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Monthly rent (CZK)</label>
+                        <div class="slider-with-number">
+                            <input type="range" id="monthlyRentSlider" class="slider" min="5000" max="20000" step="100" value="10000">
+                            <input type="number" id="monthlyRent" min="0" step="100" value="10000">
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>End-of-term buyout (CZK)</label>
+                        <input type="number" id="buyout" value="0" step="1000">
+                        <div class="helper-text">Set to remaining debt if you want a balloon payment</div>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <h3>Ops & Market</h3>
+                    <div class="form-field">
+                        <label>O&M + insurance (CZK / year)</label>
+                        <input type="number" id="opex" value="20000" step="1000">
+                    </div>
+                    <div class="form-field">
+                        <label>Grid price (CZK / kWh)</label>
+                        <input type="number" id="gridPrice" value="4.0" step="0.1">
+                    </div>
+                    <div class="form-field">
+                        <label>Annual PV production (kWh / year)</label>
+                        <input type="number" id="annualProduction" value="42000" step="1000">
+                    </div>
+                    <div class="form-field">
+                        <label>Self-consumption f (0.6–1.0)</label>
+                        <div class="slider-with-number">
+                            <input type="range" id="selfConsumption" class="slider" min="0.6" max="1.0" step="0.05" value="1.0">
+                            <input type="number" id="selfConsumptionNum" min="0.6" max="1.0" step="0.05" value="1.0">
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Client discount target δ (0–30 %)</label>
+                        <div class="slider-with-number">
+                            <input type="range" id="clientDiscount" class="slider" min="0" max="30" step="1" value="20">
+                            <input type="number" id="clientDiscountNum" min="0" max="30" step="1" value="20">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <h3>Finance knobs</h3>
+                    <div class="form-field">
+                        <label>Discount rate d (%)</label>
+                        <input type="number" id="discountRate" value="7" step="0.5">
+                    </div>
+                    <div class="form-field">
+                        <label>Start month</label>
+                        <select id="startMonth">
+                            <option value="0">Full year</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="loadPreset('fast')">Fast payoff</button>
+                    <button class="btn btn-primary" onclick="loadPreset('standard')">Standard</button>
+                    <button class="btn btn-primary" onclick="loadPreset('low')">Low monthly</button>
+                    <button class="btn btn-secondary" onclick="resetInputs()">Reset</button>
+                    <button class="btn btn-secondary" onclick="shareURL()">Share</button>
+                    <button class="btn btn-secondary" onclick="exportCSV()">Export CSV</button>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div id="warnings"></div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card neutral">
+                        <div class="kpi-value" id="kpiRmin">-</div>
+                        <div class="kpi-label">
+                            Break-even rent (R_min)
+                            <span class="tooltip-icon" data-tooltip="Monthly rent needed for NPV=0">?</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card neutral">
+                        <div class="kpi-value" id="kpiRmax">-</div>
+                        <div class="kpi-label">Client max (R_max)</div>
+                    </div>
+                    <div class="kpi-card neutral">
+                        <div class="kpi-value" id="kpiPayback">-</div>
+                        <div class="kpi-label">Payback year</div>
+                    </div>
+                    <div class="kpi-card neutral">
+                        <div class="kpi-value" id="kpiNPV">-</div>
+                        <div class="kpi-label">NPV (CZK)</div>
+                    </div>
+                    <div class="kpi-card neutral">
+                        <div class="kpi-value" id="kpiIRR">-</div>
+                        <div class="kpi-label">IRR (%)</div>
+                    </div>
+                    <div class="kpi-card neutral">
+                        <div class="kpi-value" id="kpiROI">-</div>
+                        <div class="kpi-label">Year-1 cash-on-cash ROI</div>
+                    </div>
+                    <div class="kpi-card feasibility-badge" id="feasibilityBadge">
+                        <span id="feasibilityText">-</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Cumulative Cash Flow</h3>
+                    <canvas id="chartCumulative"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Annual Net Cash Flow</h3>
+                    <canvas id="chartAnnualNCF"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3>ROI per Year</h3>
+                    <div class="chart-controls">
+                        <button id="roiCashOnCash" class="active" onclick="setROIMode('cashOnCash')">Cash-on-cash</button>
+                        <button id="roiSimple" onclick="setROIMode('simple')">Simple return</button>
+                    </div>
+                    <canvas id="chartROI"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Sensitivity: NPV vs Monthly Rent</h3>
+                    <canvas id="chartSensitivity"></canvas>
+                </div>
+
+                <div class="table-container">
+                    <h3>Yearly Cash Flow Table</h3>
+                    <div style="overflow-x: auto;">
+                        <table id="yearlyTable">
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th>Rent In</th>
+                                    <th>Loan Out</th>
+                                    <th>Opex</th>
+                                    <th>NCF</th>
+                                    <th>Cum NCF</th>
+                                    <th>Client Savings</th>
+                                    <th>ROI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let charts = {
+            cumulative: null,
+            annualNCF: null,
+            roi: null,
+            sensitivity: null
+        };
+
+        let roiMode = 'cashOnCash';
+        let currentResults = null;
+
+        function syncSliders() {
+            const pairs = [
+                ['loanTerm', 'loanTermNum'],
+                ['contractTerm', 'contractTermNum'],
+                ['monthlyRentSlider', 'monthlyRent'],
+                ['selfConsumption', 'selfConsumptionNum'],
+                ['clientDiscount', 'clientDiscountNum']
+            ];
+
+            pairs.forEach(([slider, number]) => {
+                document.getElementById(slider).addEventListener('input', (e) => {
+                    document.getElementById(number).value = e.target.value;
+                    calculate();
+                });
+                document.getElementById(number).addEventListener('input', (e) => {
+                    document.getElementById(slider).value = e.target.value;
+                    calculate();
+                });
+            });
+
+            document.querySelectorAll('input, select').forEach(el => {
+                if (!el.id.endsWith('Num') && !el.id.endsWith('Slider')) {
+                    el.addEventListener('input', calculate);
+                }
+            });
+        }
+
+        function getInputs() {
+            return {
+                loanTerm: parseFloat(document.getElementById('loanTerm').value),
+                monthlyPayment: parseFloat(document.getElementById('monthlyPayment').value),
+                initialEquity: parseFloat(document.getElementById('initialEquity').value),
+                contractTerm: parseFloat(document.getElementById('contractTerm').value),
+                monthlyRent: parseFloat(document.getElementById('monthlyRent').value),
+                buyout: parseFloat(document.getElementById('buyout').value),
+                opex: parseFloat(document.getElementById('opex').value),
+                gridPrice: parseFloat(document.getElementById('gridPrice').value),
+                annualProduction: parseFloat(document.getElementById('annualProduction').value),
+                selfConsumption: parseFloat(document.getElementById('selfConsumption').value),
+                clientDiscount: parseFloat(document.getElementById('clientDiscount').value),
+                discountRate: parseFloat(document.getElementById('discountRate').value) / 100,
+                startMonth: parseInt(document.getElementById('startMonth').value)
+            };
+        }
+
+        function annuityFactor(n, d) {
+            if (d === 0) return n;
+            return (1 - Math.pow(1 + d, -n)) / d;
+        }
+
+        function calculateRmin(inputs) {
+            const { loanTerm, monthlyPayment, contractTerm, opex, buyout, discountRate } = inputs;
+            
+            const loanPV = 12 * monthlyPayment * annuityFactor(loanTerm, discountRate);
+            const opexPV = opex * annuityFactor(contractTerm, discountRate);
+            const buyoutPV = buyout / Math.pow(1 + discountRate, contractTerm);
+            const contractAnnuity = 12 * annuityFactor(contractTerm, discountRate);
+            
+            return (loanPV + opexPV - buyoutPV) / contractAnnuity;
+        }
+
+        function calculateRmax(inputs) {
+            const { gridPrice, annualProduction, selfConsumption, clientDiscount } = inputs;
+            return (1 - clientDiscount / 100) * gridPrice * selfConsumption * annualProduction / 12;
+        }
+
+        function calculateIRR(cashFlows) {
+            const maxIterations = 1000;
+            const tolerance = 1e-6;
+            let rate = 0.1;
+            
+            for (let i = 0; i < maxIterations; i++) {
+                let npv = 0;
+                let npvDerivative = 0;
+                
+                for (let t = 0; t < cashFlows.length; t++) {
+                    const factor = Math.pow(1 + rate, t + 1);
+                    npv += cashFlows[t] / factor;
+                    npvDerivative -= (t + 1) * cashFlows[t] / (factor * (1 + rate));
+                }
+                
+                if (Math.abs(npv) < tolerance) return rate;
+                if (Math.abs(npvDerivative) < tolerance) return null;
+                
+                rate = rate - npv / npvDerivative;
+                if (rate < -0.99) rate = -0.99;
+                if (rate > 10) rate = 10;
+            }
+            return null;
+        }
+
+        function calculateFinancials(inputs) {
+            const { loanTerm, monthlyPayment, initialEquity, contractTerm, monthlyRent, 
+                    buyout, opex, gridPrice, annualProduction, selfConsumption, 
+                    discountRate, startMonth } = inputs;
+
+            const yearlyData = [];
+            let cumNCF = -initialEquity;
+            let paybackYear = null;
+
+            for (let year = 1; year <= contractTerm; year++) {
+                let monthsInYear = 12;
+                if (year === 1 && startMonth > 0) {
+                    monthsInYear = 13 - startMonth;
+                }
+
+                const rentIn = monthsInYear * monthlyRent;
+                const loanOut = year <= loanTerm ? monthsInYear * monthlyPayment : 0;
+                const opexOut = (monthsInYear / 12) * opex;
+                
+                let ncf = rentIn - loanOut - opexOut;
+                if (year === contractTerm) {
+                    ncf += buyout;
+                }
+
+                const equityAtStartOfYear = initialEquity + Math.max(0, -cumNCF);
+                
+                cumNCF += ncf;
+
+                if (paybackYear === null && cumNCF >= 0) {
+                    paybackYear = year;
+                }
+
+                const clientSavings = (monthsInYear / 12) * gridPrice * selfConsumption * annualProduction;
+                
+                const roiCashOnCash = equityAtStartOfYear > 0 ? (ncf / equityAtStartOfYear) * 100 : 0;
+                const roiSimple = initialEquity > 0 ? (ncf / initialEquity) * 100 : 0;
+
+                yearlyData.push({
+                    year,
+                    rentIn,
+                    loanOut,
+                    opexOut,
+                    ncf,
+                    cumNCF,
+                    clientSavings,
+                    roiCashOnCash,
+                    roiSimple,
+                    equityAtStart: equityAtStartOfYear
+                });
+            }
+
+            const cashFlows = [-initialEquity, ...yearlyData.map(d => d.ncf)];
+            let npv = 0;
+            for (let i = 1; i <= contractTerm; i++) {
+                npv += yearlyData[i - 1].ncf / Math.pow(1 + discountRate, i);
+            }
+            if (initialEquity > 0) {
+                npv -= initialEquity;
+            }
+
+            const irr = calculateIRR(cashFlows.slice(1));
+            const rMin = calculateRmin(inputs);
+            const rMax = calculateRmax(inputs);
+            const year1ROI = yearlyData[0] ? yearlyData[0].roiCashOnCash : 0;
+
+            return {
+                yearlyData,
+                npv,
+                irr,
+                rMin,
+                rMax,
+                paybackYear: paybackYear || `> ${contractTerm}`,
+                year1ROI
+            };
+        }
+
+        function formatCZK(value) {
+            return new Intl.NumberFormat('cs-CZ', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value) + ' Kč';
+        }
+
+        function updateKPIs(results, inputs) {
+            document.getElementById('kpiRmin').textContent = formatCZK(results.rMin);
+            document.getElementById('kpiRmax').textContent = formatCZK(results.rMax);
+            document.getElementById('kpiPayback').textContent = results.paybackYear;
+            document.getElementById('kpiNPV').textContent = formatCZK(results.npv);
+            document.getElementById('kpiIRR').textContent = results.irr !== null ? 
+                (results.irr * 100).toFixed(1) + '%' : 'N/A';
+            document.getElementById('kpiROI').textContent = results.year1ROI.toFixed(1) + '%';
+
+            const feasible = results.rMin <= results.rMax;
+            const badge = document.getElementById('feasibilityBadge');
+            const feasibilityText = document.getElementById('feasibilityText');
+            
+            if (feasible) {
+                badge.className = 'kpi-card feasibility-badge green';
+                feasibilityText.textContent = '✓ Feasible: R_min ≤ R_max';
+            } else {
+                badge.className = 'kpi-card feasibility-badge red';
+                feasibilityText.textContent = '✗ Not feasible: extend term or add buyout';
+            }
+
+            document.querySelectorAll('.kpi-card:not(.feasibility-badge)').forEach(card => {
+                card.className = 'kpi-card neutral';
+            });
+        }
+
+        function updateWarnings(inputs) {
+            const warnings = [];
+            
+            if (inputs.contractTerm < inputs.loanTerm && inputs.buyout === 0) {
+                warnings.push('⚠️ Contract ends before loan is repaid. Consider a buyout or longer term.');
+            }
+            
+            if (inputs.initialEquity === 0 && roiMode === 'simple') {
+                warnings.push('ℹ️ ROI per year needs non-zero equity for simple return mode. Using cash-on-cash instead.');
+            }
+
+            const warningsDiv = document.getElementById('warnings');
+            if (warnings.length > 0) {
+                warningsDiv.innerHTML = warnings.map(w => `<div class="warning">${w}</div>`).join('');
+            } else {
+                warningsDiv.innerHTML = '';
+            }
+        }
+
+        function updateCumulativeChart(results) {
+            const ctx = document.getElementById('chartCumulative');
+            if (charts.cumulative) charts.cumulative.destroy();
+
+            const years = results.yearlyData.map(d => d.year);
+            const cumRent = [];
+            const cumLoan = [];
+            const cumNCF = results.yearlyData.map(d => d.cumNCF);
+            
+            let rentSum = 0, loanSum = 0;
+            results.yearlyData.forEach(d => {
+                rentSum += d.rentIn;
+                loanSum += d.loanOut;
+                cumRent.push(rentSum);
+                cumLoan.push(loanSum);
+            });
+
+            charts.cumulative = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'Cumulative Rent Inflow',
+                        data: cumRent,
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }, {
+                        label: 'Cumulative Loan Payments',
+                        data: cumLoan,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    }, {
+                        label: 'Cumulative Net Cash Flow',
+                        data: cumNCF,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: value => formatCZK(value)
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.dataset.label + ': ' + formatCZK(ctx.parsed.y)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAnnualNCFChart(results, inputs) {
+            const ctx = document.getElementById('chartAnnualNCF');
+            if (charts.annualNCF) charts.annualNCF.destroy();
+
+            const years = results.yearlyData.map(d => d.year);
+            const ncfData = results.yearlyData.map(d => d.ncf);
+            const debtService = results.yearlyData.map(d => d.loanOut);
+
+            charts.annualNCF = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'Annual NCF',
+                        data: ncfData,
+                        backgroundColor: ncfData.map(v => v >= 0 ? 'rgba(46, 204, 113, 0.7)' : 'rgba(231, 76, 60, 0.7)'),
+                        borderColor: ncfData.map(v => v >= 0 ? '#2ecc71' : '#e74c3c'),
+                        borderWidth: 2
+                    }, {
+                        label: 'Annual Debt Service',
+                        data: debtService,
+                        type: 'line',
+                        borderColor: '#9b59b6',
+                        backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: value => formatCZK(value)
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.dataset.label + ': ' + formatCZK(ctx.parsed.y)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateROIChart(results, inputs) {
+            const ctx = document.getElementById('chartROI');
+            if (charts.roi) charts.roi.destroy();
+
+            const years = results.yearlyData.map(d => d.year);
+            const roiData = results.yearlyData.map(d => 
+                roiMode === 'cashOnCash' ? d.roiCashOnCash : d.roiSimple
+            );
+
+            charts.roi = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: roiMode === 'cashOnCash' ? 'Cash-on-cash ROI (%)' : 'Simple Return (%)',
+                        data: roiData,
+                        backgroundColor: roiData.map(v => v >= 0 ? 'rgba(52, 152, 219, 0.7)' : 'rgba(231, 76, 60, 0.7)'),
+                        borderColor: roiData.map(v => v >= 0 ? '#3498db' : '#e74c3c'),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: value => value.toFixed(1) + '%'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '%'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateSensitivityChart(inputs) {
+            const ctx = document.getElementById('chartSensitivity');
+            if (charts.sensitivity) charts.sensitivity.destroy();
+
+            const currentRent = inputs.monthlyRent;
+            const rents = [];
+            const npvs = [];
+            
+            const minRent = Math.max(currentRent * 0.7, 3000);
+            const maxRent = currentRent * 1.3;
+            
+            for (let r = minRent; r <= maxRent; r += 200) {
+                const testInputs = { ...inputs, monthlyRent: r };
+                const testResults = calculateFinancials(testInputs);
+                rents.push(r);
+                npvs.push(testResults.npv);
+            }
+
+            const results = calculateFinancials(inputs);
+
+            charts.sensitivity = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: rents,
+                    datasets: [{
+                        label: 'NPV',
+                        data: npvs,
+                        borderColor: '#9b59b6',
+                        backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: value => formatCZK(value)
+                            },
+                            grid: {
+                                color: ctx => ctx.tick.value === 0 ? '#e74c3c' : '#e0e0e0'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                callback: value => formatCZK(value)
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: ctx => 'Rent: ' + formatCZK(ctx[0].parsed.x),
+                                label: ctx => 'NPV: ' + formatCZK(ctx.parsed.y)
+                            }
+                        },
+                        annotation: {
+                            annotations: {
+                                currentRent: {
+                                    type: 'line',
+                                    xMin: currentRent,
+                                    xMax: currentRent,
+                                    borderColor: '#3498db',
+                                    borderWidth: 2,
+                                    label: {
+                                        content: 'Current',
+                                        enabled: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTable(results) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            results.yearlyData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.year}</td>
+                    <td>${formatCZK(row.rentIn)}</td>
+                    <td>${formatCZK(row.loanOut)}</td>
+                    <td>${formatCZK(row.opexOut)}</td>
+                    <td>${formatCZK(row.ncf)}</td>
+                    <td>${formatCZK(row.cumNCF)}</td>
+                    <td>${formatCZK(row.clientSavings)}</td>
+                    <td>${(roiMode === 'cashOnCash' ? row.roiCashOnCash : row.roiSimple).toFixed(1)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function calculate() {
+            const inputs = getInputs();
+            const results = calculateFinancials(inputs);
+            currentResults = results;
+
+            updateKPIs(results, inputs);
+            updateWarnings(inputs);
+            updateCumulativeChart(results);
+            updateAnnualNCFChart(results, inputs);
+            updateROIChart(results, inputs);
+            updateSensitivityChart(inputs);
+            updateTable(results);
+        }
+
+        function setROIMode(mode) {
+            roiMode = mode;
+            document.getElementById('roiCashOnCash').classList.toggle('active', mode === 'cashOnCash');
+            document.getElementById('roiSimple').classList.toggle('active', mode === 'simple');
+            calculate();
+        }
+
+        function loadPreset(type) {
+            const presets = {
+                fast: {
+                    loanTerm: 8, monthlyPayment: 10500, initialEquity: 50000,
+                    contractTerm: 8, monthlyRent: 12000, buyout: 0,
+                    opex: 20000, gridPrice: 4.0, annualProduction: 42000,
+                    selfConsumption: 1.0, clientDiscount: 15, discountRate: 7, startMonth: 0
+                },
+                standard: {
+                    loanTerm: 10, monthlyPayment: 8500, initialEquity: 0,
+                    contractTerm: 10, monthlyRent: 10000, buyout: 0,
+                    opex: 20000, gridPrice: 4.0, annualProduction: 42000,
+                    selfConsumption: 1.0, clientDiscount: 20, discountRate: 7, startMonth: 0
+                },
+                low: {
+                    loanTerm: 15, monthlyPayment: 6000, initialEquity: 0,
+                    contractTerm: 15, monthlyRent: 8500, buyout: 50000,
+                    opex: 20000, gridPrice: 4.0, annualProduction: 42000,
+                    selfConsumption: 0.9, clientDiscount: 25, discountRate: 7, startMonth: 0
+                }
+            };
+
+            const preset = presets[type];
+            if (preset) {
+                Object.keys(preset).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) el.value = preset[key];
+                });
+                
+                document.getElementById('loanTermNum').value = preset.loanTerm;
+                document.getElementById('contractTermNum').value = preset.contractTerm;
+                document.getElementById('monthlyRentSlider').value = preset.monthlyRent;
+                document.getElementById('selfConsumptionNum').value = preset.selfConsumption;
+                document.getElementById('clientDiscountNum').value = preset.clientDiscount;
+                
+                calculate();
+            }
+        }
+
+        function resetInputs() {
+            loadPreset('standard');
+        }
+
+        function shareURL() {
+            const inputs = getInputs();
+            const params = new URLSearchParams();
+            Object.keys(inputs).forEach(key => {
+                params.set(key, inputs[key]);
+            });
+            const url = window.location.origin + window.location.pathname + '?' + params.toString();
+            
+            navigator.clipboard.writeText(url).then(() => {
+                alert('URL copied to clipboard!');
+            }).catch(() => {
+                prompt('Copy this URL:', url);
+            });
+        }
+
+        function exportCSV() {
+            if (!currentResults) return;
+            
+            const headers = ['Year', 'Rent In', 'Loan Out', 'Opex', 'NCF', 'Cum NCF', 'Client Savings', 'ROI'];
+            const rows = currentResults.yearlyData.map(row => [
+                row.year,
+                row.rentIn.toFixed(0),
+                row.loanOut.toFixed(0),
+                row.opexOut.toFixed(0),
+                row.ncf.toFixed(0),
+                row.cumNCF.toFixed(0),
+                row.clientSavings.toFixed(0),
+                (roiMode === 'cashOnCash' ? row.roiCashOnCash : row.roiSimple).toFixed(2)
+            ]);
+            
+            const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pv-profitability.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.toString()) {
+                const inputs = {
+                    loanTerm: params.get('loanTerm'),
+                    monthlyPayment: params.get('monthlyPayment'),
+                    initialEquity: params.get('initialEquity'),
+                    contractTerm: params.get('contractTerm'),
+                    monthlyRent: params.get('monthlyRent'),
+                    buyout: params.get('buyout'),
+                    opex: params.get('opex'),
+                    gridPrice: params.get('gridPrice'),
+                    annualProduction: params.get('annualProduction'),
+                    selfConsumption: params.get('selfConsumption'),
+                    clientDiscount: params.get('clientDiscount'),
+                    discountRate: params.get('discountRate'),
+                    startMonth: params.get('startMonth')
+                };
+
+                Object.keys(inputs).forEach(key => {
+                    if (inputs[key] !== null) {
+                        const el = document.getElementById(key);
+                        if (el) el.value = inputs[key];
+                    }
+                });
+
+                if (inputs.loanTerm) document.getElementById('loanTermNum').value = inputs.loanTerm;
+                if (inputs.contractTerm) document.getElementById('contractTermNum').value = inputs.contractTerm;
+                if (inputs.monthlyRent) document.getElementById('monthlyRentSlider').value = inputs.monthlyRent;
+                if (inputs.selfConsumption) document.getElementById('selfConsumptionNum').value = inputs.selfConsumption;
+                if (inputs.clientDiscount) document.getElementById('clientDiscountNum').value = inputs.clientDiscount;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            syncSliders();
+            loadFromURL();
+            calculate();
+        });
+    </script>
+</body>
+</html>
+
